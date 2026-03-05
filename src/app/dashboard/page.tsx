@@ -79,7 +79,7 @@ export default function DashboardPage() {
   const [currentPath, setCurrentPath] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
-  const [sortBy, setSortBy] = useState<"date" | "name">("date");
+  const [sortBy, setSortBy] = useState<"date" | "name">("name");
   const [sortAsc, setSortAsc] = useState(false);
   const [search, setSearch] = useState("");
   const [dropTarget, setDropTarget] = useState<string | null>(null);
