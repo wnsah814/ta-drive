@@ -80,6 +80,7 @@ export default function DashboardPage() {
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [sortBy, setSortBy] = useState<"date" | "name">("date");
+  const [sortAsc, setSortAsc] = useState(false);
   const [search, setSearch] = useState("");
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -220,12 +221,14 @@ export default function DashboardPage() {
 
   const pathSegments = currentPath.split("/").filter(Boolean);
 
-  const sortItems = (list: FileItem[]) =>
-    [...list].sort((a, b) =>
+  const sortItems = (list: FileItem[]) => {
+    const dir = sortAsc ? 1 : -1;
+    return [...list].sort((a, b) =>
       sortBy === "name"
-        ? a.name.localeCompare(b.name, "ko")
-        : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ? dir * a.name.localeCompare(b.name, "ko")
+        : dir * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
     );
+  };
 
   const query = search.toLowerCase();
   const filtered = query
@@ -426,12 +429,24 @@ export default function DashboardPage() {
                 {folders.length > 0 && files.length > 0 && " · "}
                 {files.length > 0 && `파일 ${files.length}개`}
               </h2>
-              <button
-                onClick={() => setSortBy((s) => (s === "date" ? "name" : "date"))}
-                className="text-[12px] text-gray-400 hover:text-gray-600 transition cursor-pointer"
-              >
-                {sortBy === "date" ? "최신순" : "이름순"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSortBy((s) => (s === "date" ? "name" : "date"))}
+                  className="text-[12px] text-gray-400 hover:text-gray-600 transition cursor-pointer"
+                >
+                  {sortBy === "date" ? "날짜" : "이름"}
+                </button>
+                <button
+                  onClick={() => setSortAsc((v) => !v)}
+                  className="text-gray-400 hover:text-gray-600 transition cursor-pointer"
+                  title={sortAsc ? "오름차순" : "내림차순"}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${sortAsc ? "" : "rotate-180"}`}>
+                    <path d="M12 19V5"/>
+                    <polyline points="5,12 12,5 19,12"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden divide-y divide-gray-50">
               {/* Folders first */}
