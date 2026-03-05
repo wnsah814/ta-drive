@@ -63,3 +63,24 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ success: true });
 }
+
+export async function PATCH(request: NextRequest) {
+  const { from, to } = await request.json();
+
+  if (!from || !to || typeof from !== "string" || typeof to !== "string") {
+    return NextResponse.json({ error: "잘못된 요청입니다." }, { status: 400 });
+  }
+
+  const fromPath = encodePath(from);
+  const toPath = encodePath(to);
+
+  const { error } = await supabase.storage
+    .from(BUCKET_NAME)
+    .move(fromPath, toPath);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}

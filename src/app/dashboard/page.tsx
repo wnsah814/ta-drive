@@ -81,6 +81,7 @@ export default function DashboardPage() {
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [sortBy, setSortBy] = useState<"date" | "name">("date");
   const [search, setSearch] = useState("");
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -157,6 +158,23 @@ export default function DashboardPage() {
       await fetchItems();
     } catch {
       setError("삭제에 실패했습니다.");
+    }
+  };
+
+  const moveFile = async (fileName: string, targetFolder: string) => {
+    setError("");
+    try {
+      const from = `${currentPath}${fileName}`;
+      const to = `${currentPath}${targetFolder}/${fileName}`;
+      const res = await fetch("/api/files", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ from, to }),
+      });
+      if (!res.ok) throw new Error();
+      await fetchItems();
+    } catch {
+      setError("파일 이동에 실패했습니다.");
     }
   };
 
@@ -420,8 +438,26 @@ export default function DashboardPage() {
               {folders.map((folder) => (
                 <div
                   key={`folder-${folder.name}`}
-                  className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/50 transition group cursor-pointer"
+                  className={`flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/50 transition group cursor-pointer ${
+                    dropTarget === folder.name ? "bg-amber-50/50 ring-1 ring-amber-200 ring-inset" : ""
+                  }`}
                   onClick={() => handleFolderClick(folder.name)}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDropTarget(folder.name);
+                  }}
+                  onDragLeave={(e) => {
+                    e.stopPropagation();
+                    setDropTarget(null);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDropTarget(null);
+                    const fileName = e.dataTransfer.getData("text/plain");
+                    if (fileName) moveFile(fileName, folder.name);
+                  }}
                 >
                   {/* Folder icon */}
                   <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
@@ -456,7 +492,12 @@ export default function DashboardPage() {
               {files.map((file) => (
                 <div
                   key={`file-${file.name}`}
-                  className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/50 transition group"
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("text/plain", file.name);
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/50 transition group cursor-grab active:cursor-grabbing"
                 >
                   <FileIcon name={file.name} />
 
