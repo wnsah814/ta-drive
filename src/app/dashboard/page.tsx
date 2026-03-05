@@ -37,6 +37,7 @@ export default function DashboardPage() {
   const [currentPath, setCurrentPath] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
+  const [sortBy, setSortBy] = useState<"date" | "name">("date");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -153,8 +154,16 @@ export default function DashboardPage() {
   };
 
   const pathSegments = currentPath.split("/").filter(Boolean);
-  const folders = items.filter((i) => i.type === "folder");
-  const files = items.filter((i) => i.type === "file");
+
+  const sortItems = (list: FileItem[]) =>
+    [...list].sort((a, b) =>
+      sortBy === "name"
+        ? a.name.localeCompare(b.name, "ko")
+        : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+  const folders = sortItems(items.filter((i) => i.type === "folder"));
+  const files = sortItems(items.filter((i) => i.type === "file"));
 
   return (
     <div className="min-h-screen">
@@ -328,6 +337,12 @@ export default function DashboardPage() {
                 {folders.length > 0 && files.length > 0 && " · "}
                 {files.length > 0 && `파일 ${files.length}개`}
               </h2>
+              <button
+                onClick={() => setSortBy((s) => (s === "date" ? "name" : "date"))}
+                className="text-[12px] text-gray-400 hover:text-gray-600 transition cursor-pointer"
+              >
+                {sortBy === "date" ? "최신순" : "이름순"}
+              </button>
             </div>
             <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden divide-y divide-gray-50">
               {/* Folders first */}
