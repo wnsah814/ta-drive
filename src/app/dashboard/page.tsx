@@ -61,36 +61,40 @@ export default function DashboardPage() {
     fetchItems();
   }, [fetchItems]);
 
-  const uploadFile = async (file: File) => {
+  const uploadFiles = async (fileList: File[]) => {
+    if (fileList.length === 0) return;
     setError("");
     setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("path", currentPath);
-      const res = await fetch("/api/files", { method: "POST", body: formData });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "업로드에 실패했습니다.");
+    const errors: string[] = [];
+    for (const file of fileList) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("path", currentPath);
+        const res = await fetch("/api/files", { method: "POST", body: formData });
+        if (!res.ok) {
+          const data = await res.json();
+          errors.push(`${file.name}: ${data.error || "실패"}`);
+        }
+      } catch {
+        errors.push(`${file.name}: 업로드 실패`);
       }
-      await fetchItems();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "업로드에 실패했습니다.");
-    } finally {
-      setUploading(false);
     }
+    if (errors.length > 0) setError(errors.join("\n"));
+    await fetchItems();
+    setUploading(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file) uploadFile(file);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) uploadFiles(files);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) uploadFile(file);
+    const files = Array.from(e.target.files ?? []);
+    if (files.length > 0) uploadFiles(files);
     e.target.value = "";
   };
 
@@ -238,6 +242,7 @@ export default function DashboardPage() {
           <input
             ref={fileInputRef}
             type="file"
+            multiple
             onChange={handleFileSelect}
             className="hidden"
           />
