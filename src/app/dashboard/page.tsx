@@ -24,6 +24,48 @@ function formatDate(iso: string): string {
   });
 }
 
+const FILE_TYPE_STYLES: Record<string, { bg: string; stroke: string }> = {
+  pdf: { bg: "bg-red-50", stroke: "#ef4444" },
+  ppt: { bg: "bg-orange-50", stroke: "#f97316" },
+  pptx: { bg: "bg-orange-50", stroke: "#f97316" },
+  doc: { bg: "bg-blue-50", stroke: "#3b82f6" },
+  docx: { bg: "bg-blue-50", stroke: "#3b82f6" },
+  xls: { bg: "bg-green-50", stroke: "#22c55e" },
+  xlsx: { bg: "bg-green-50", stroke: "#22c55e" },
+  zip: { bg: "bg-purple-50", stroke: "#a855f7" },
+  rar: { bg: "bg-purple-50", stroke: "#a855f7" },
+  png: { bg: "bg-teal-50", stroke: "#14b8a6" },
+  jpg: { bg: "bg-teal-50", stroke: "#14b8a6" },
+  jpeg: { bg: "bg-teal-50", stroke: "#14b8a6" },
+  gif: { bg: "bg-teal-50", stroke: "#14b8a6" },
+  svg: { bg: "bg-teal-50", stroke: "#14b8a6" },
+  mp4: { bg: "bg-pink-50", stroke: "#ec4899" },
+  mov: { bg: "bg-pink-50", stroke: "#ec4899" },
+  hwp: { bg: "bg-sky-50", stroke: "#0ea5e9" },
+  hwpx: { bg: "bg-sky-50", stroke: "#0ea5e9" },
+  txt: { bg: "bg-gray-50", stroke: "#6b7280" },
+  md: { bg: "bg-gray-50", stroke: "#6b7280" },
+};
+
+const DEFAULT_STYLE = { bg: "bg-gray-50", stroke: "#b0b0b0" };
+
+function getFileStyle(name: string) {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  return FILE_TYPE_STYLES[ext] ?? DEFAULT_STYLE;
+}
+
+function FileIcon({ name }: { name: string }) {
+  const { bg, stroke } = getFileStyle(name);
+  return (
+    <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+        <polyline points="14,2 14,8 20,8"/>
+      </svg>
+    </div>
+  );
+}
+
 function fileApiUrl(fullPath: string): string {
   return `/api/files/${fullPath.split("/").map(encodeURIComponent).join("/")}`;
 }
@@ -416,13 +458,7 @@ export default function DashboardPage() {
                   key={`file-${file.name}`}
                   className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/50 transition group"
                 >
-                  {/* File icon */}
-                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                      <polyline points="14,2 14,8 20,8"/>
-                    </svg>
-                  </div>
+                  <FileIcon name={file.name} />
 
                   {/* File info */}
                   <div className="flex-1 min-w-0">
