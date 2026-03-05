@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TA Drive
 
-## Getting Started
+조교용 강의자료 파일 공유 웹앱.
 
-First, run the development server:
+## 기능
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- 비밀번호 기반 로그인 (JWT)
+- 파일 업로드/다운로드/삭제 (최대 50MB, 다중 업로드 지원)
+- 폴더 생성/탐색/삭제 + 브레드크럼 네비게이션
+- 파일 검색 (현재 폴더 내 이름 필터)
+- 정렬 (이름/날짜, 오름차순/내림차순)
+- 파일 타입별 아이콘 (PDF, PPT, DOC, 이미지 등)
+- 드래그 앤 드롭으로 파일을 폴더로 이동
+
+## 기술 스택
+
+- **Next.js 16** (App Router, Turbopack)
+- **React 19**
+- **Tailwind CSS 4**
+- **Supabase Storage** (파일 저장)
+- **jose** (JWT 인증)
+
+## 설정
+
+### 1. Supabase
+
+1. [Supabase](https://supabase.com)에서 프로젝트 생성
+2. Storage에서 `files` 버킷 생성
+
+### 2. 환경 변수
+
+`.env.local` 파일 생성:
+
+```env
+NEXT_PUBLIC_SITE_NAME=TA Drive
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+ACCESS_PASSWORD=your-password
+JWT_SECRET=your-jwt-secret
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`JWT_SECRET` 생성:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+openssl rand -base64 32
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. 실행
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 배포
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Vercel에 배포 시 위 환경 변수를 프로젝트 설정에 추가.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+vercel
+```
