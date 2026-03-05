@@ -38,6 +38,7 @@ export default function DashboardPage() {
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [sortBy, setSortBy] = useState<"date" | "name">("date");
+  const [search, setSearch] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -166,8 +167,12 @@ export default function DashboardPage() {
         : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
-  const folders = sortItems(items.filter((i) => i.type === "folder"));
-  const files = sortItems(items.filter((i) => i.type === "file"));
+  const query = search.toLowerCase();
+  const filtered = query
+    ? items.filter((i) => i.name.toLowerCase().includes(query))
+    : items;
+  const folders = sortItems(filtered.filter((i) => i.type === "folder"));
+  const files = sortItems(filtered.filter((i) => i.type === "file"));
 
   return (
     <div className="min-h-screen">
@@ -223,6 +228,21 @@ export default function DashboardPage() {
             </span>
           ))}
         </nav>
+
+        {/* Search */}
+        <div className="relative mb-6">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="검색"
+            className="w-full pl-9 pr-3 py-2 text-[13px] bg-white border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-200 transition"
+          />
+        </div>
 
         {/* Upload area */}
         <div
@@ -328,10 +348,14 @@ export default function DashboardPage() {
           <div className="text-center py-16">
             <div className="inline-block w-5 h-5 border-2 border-gray-200 border-t-gray-500 rounded-full animate-spin" />
           </div>
-        ) : items.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-sm text-gray-300">
-              {currentPath ? "이 폴더는 비어 있습니다" : "업로드된 파일이 없습니다"}
+              {search
+                ? "검색 결과가 없습니다"
+                : currentPath
+                  ? "이 폴더는 비어 있습니다"
+                  : "업로드된 파일이 없습니다"}
             </p>
           </div>
         ) : (
