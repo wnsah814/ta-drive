@@ -83,6 +83,7 @@ export default function DashboardPage() {
   const [sortAsc, setSortAsc] = useState(false);
   const [search, setSearch] = useState("");
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -264,32 +265,49 @@ export default function DashboardPage() {
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 mb-6 text-[13px]">
+        <nav className="flex items-center justify-between mb-6 text-[13px]">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => navigateTo(-1)}
+              className={`hover:text-gray-800 transition cursor-pointer ${
+                pathSegments.length === 0
+                  ? "text-gray-800 font-medium"
+                  : "text-gray-400"
+              }`}
+            >
+              루트
+            </button>
+            {pathSegments.map((seg, i) => (
+              <span key={i} className="flex items-center gap-1.5">
+                <span className="text-gray-200">/</span>
+                <button
+                  onClick={() => navigateTo(i)}
+                  className={`hover:text-gray-800 transition cursor-pointer ${
+                    i === pathSegments.length - 1
+                      ? "text-gray-800 font-medium"
+                      : "text-gray-400"
+                  }`}
+                >
+                  {seg}
+                </button>
+              </span>
+            ))}
+          </div>
           <button
-            onClick={() => navigateTo(-1)}
-            className={`hover:text-gray-800 transition cursor-pointer ${
-              pathSegments.length === 0
-                ? "text-gray-800 font-medium"
-                : "text-gray-400"
-            }`}
+            onClick={async () => {
+              setRefreshing(true);
+              await fetchItems();
+              setRefreshing(false);
+            }}
+            disabled={refreshing}
+            className="p-1.5 rounded-md text-gray-300 hover:text-gray-500 hover:bg-gray-50 transition cursor-pointer disabled:cursor-default"
+            title="새로고침"
           >
-            루트
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${refreshing ? "animate-spin" : ""}`}>
+              <polyline points="23,4 23,10 17,10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
           </button>
-          {pathSegments.map((seg, i) => (
-            <span key={i} className="flex items-center gap-1.5">
-              <span className="text-gray-200">/</span>
-              <button
-                onClick={() => navigateTo(i)}
-                className={`hover:text-gray-800 transition cursor-pointer ${
-                  i === pathSegments.length - 1
-                    ? "text-gray-800 font-medium"
-                    : "text-gray-400"
-                }`}
-              >
-                {seg}
-              </button>
-            </span>
-          ))}
         </nav>
 
         {/* Search */}
