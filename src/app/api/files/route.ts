@@ -31,37 +31,29 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData();
-  const file = formData.get("file") as File | null;
-  const path = (formData.get("path") as string) ?? "";
+  const { fileName, path, contentType } = await request.json();
 
-  if (!file) {
-    return NextResponse.json({ error: "파일이 없습니다." }, { status: 400 });
+  if (!fileName || typeof fileName !== "string") {
+    return NextResponse.json({ error: "파일 이름이 없습니다." }, { status: 400 });
   }
 
-  if (file.size > MAX_FILE_SIZE) {
-    return NextResponse.json(
-      { error: "파일 크기는 50MB를 초과할 수 없습니다." },
-      { status: 400 }
-    );
-  }
+  const storagePath = encodePath(path ?? "");
+  const filePath = `${storagePath}${encodeSegment(fileName)}`;
 
-  const buffer = await file.arrayBuffer();
-  const storagePath = encodePath(path);
-  const filePath = `${storagePath}${encodeSegment(file.name)}`;
-
-  const { error } = await supabase.storage
+  const { data, error } = await supabase.storage
     .from(BUCKET_NAME)
-    .upload(filePath, buffer, {
-      contentType: file.type,
-      upsert: true,
-    });
+    .createSignedUploadUrl(filePath, { upsert: true });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+    signedUrl: data.signedUrl,
+    token: data.token,
+    path: filePath,
+    contentType: contentType || "application/octet-stream",
+  });
 }
 
 export async function PATCH(request: NextRequest) {

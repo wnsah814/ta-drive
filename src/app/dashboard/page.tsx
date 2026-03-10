@@ -113,14 +113,39 @@ export default function DashboardPage() {
     setUploading(true);
     const errors: string[] = [];
     for (const file of fileList) {
+      if (file.size > 50 * 1024 * 1024) {
+        errors.push(`${file.name}: 50MB를 초과합니다.`);
+        continue;
+      }
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("path", currentPath);
-        const res = await fetch("/api/files", { method: "POST", body: formData });
+        // 1. Get signed upload URL from our API
+        const res = await fetch("/api/files", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: file.name,
+            path: currentPath,
+            contentType: file.type,
+          }),
+        });
         if (!res.ok) {
           const data = await res.json();
           errors.push(`${file.name}: ${data.error || "실패"}`);
+          continue;
+        }
+        const { signedUrl, token } = await res.json();
+
+        // 2. Upload directly to Supabase
+        const uploadRes = await fetch(signedUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": file.type || "application/octet-stream",
+            "x-upsert": "true",
+          },
+          body: file,
+        });
+        if (!uploadRes.ok) {
+          errors.push(`${file.name}: 업로드 실패`);
         }
       } catch {
         errors.push(`${file.name}: 업로드 실패`);
